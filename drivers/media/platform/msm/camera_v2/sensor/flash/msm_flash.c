@@ -624,6 +624,10 @@ static int32_t msm_flash_low(
 	for (i = 0; i < flash_ctrl->flash_num_sources; i++)
 		if (flash_ctrl->flash_trigger[i])
 			led_trigger_event(flash_ctrl->flash_trigger[i], 0);
+#ifdef CONFIG_MACH_ASUS_SDM660
+	if (flash_ctrl->switch_trigger)
+		led_trigger_event(flash_ctrl->switch_trigger, 0);
+#endif
 
 	/* Turn on flash triggers */
 	for (i = 0; i < flash_ctrl->torch_num_sources; i++) {
@@ -661,6 +665,10 @@ static int32_t msm_flash_high(
 	for (i = 0; i < flash_ctrl->torch_num_sources; i++)
 		if (flash_ctrl->torch_trigger[i])
 			led_trigger_event(flash_ctrl->torch_trigger[i], 0);
+#ifdef CONFIG_MACH_ASUS_SDM660
+	if (flash_ctrl->switch_trigger)
+		led_trigger_event(flash_ctrl->switch_trigger, 0);
+#endif
 
 	/* Turn on flash triggers */
 	for (i = 0; i < flash_ctrl->flash_num_sources; i++) {
@@ -1076,11 +1084,6 @@ static int32_t msm_flash_get_pmic_source_info(
 				of_node_put(torch_src_node);
 				continue;
 			}
-
-#ifdef CONFIG_MACH_XIAOMI_LAVENDER
-			if (fctrl->torch_max_current[i] < 1000)
-				fctrl->torch_max_current[i] = 1000;
-#endif
 
 			of_node_put(torch_src_node);
 

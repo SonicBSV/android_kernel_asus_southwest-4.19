@@ -7,6 +7,7 @@
 #include <linux/platform_device.h>
 #include <linux/module.h>
 #include <sound/pcm_params.h>
+#include <linux/delay.h>
 #include "msm-pcm-routing-v2.h"
 #include <asoc/sdm660-common.h>
 #include <asoc/msm-cdc-pinctrl.h>
@@ -453,9 +454,51 @@ done:
 	return ret;
 }
 
+extern int hph_ext_en_gpio;
+extern int hph_ext_sw_gpio;
+
+static int is_ext_hph_gpio_support(struct platform_device *pdev,
+				   struct msm_asoc_mach_data *pdata)
+{
+#if 0
+	const char *hph_ext_switch = "qcom,msm-hph-ext-sw";
+
+	pdata->hph_ext_en_gpio = of_get_named_gpio(pdev->dev.of_node,
+				hph_ext_switch, 0);
+
+	pdata->hph_ext_sw_gpio = of_get_named_gpio(pdev->dev.of_node,
+				hph_ext_switch, 1);
+	pr_err("%s:Enter %d,%d\n", __func__, pdata->hph_ext_en_gpio,
+	       pdata->hph_ext_sw_gpio);
+
+	if (pdata->hph_ext_en_gpio < 0 || pdata->hph_ext_sw_gpio < 0) {
+		dev_err(&pdev->dev,
+			"%s: missing %s in dt node\n", __func__,
+			hph_ext_switch);
+	} else {
+		if (!gpio_is_valid(pdata->hph_ext_en_gpio) ||
+		    !gpio_is_valid(pdata->hph_ext_sw_gpio)) {
+			pr_err("%s: Invalid external headphone gpio: %d,%d",
+				__func__, pdata->hph_ext_en_gpio,
+				pdata->hph_ext_sw_gpio);
+			return -EINVAL;
+		}
+		hph_ext_en_gpio = pdata->hph_ext_en_gpio;
+		hph_ext_sw_gpio = pdata->hph_ext_sw_gpio;
+	}
+#endif
+	return 0;
+}
+
+static int enable_hph_ext_sw(struct snd_soc_component *component, int enable)
+{
+	return 0;
+}
+
 static int is_ext_spk_gpio_support(struct platform_device *pdev,
 				   struct msm_asoc_mach_data *pdata)
 {
+#if 0
 	const char *spk_ext_pa = "qcom,msm-spk-ext-pa";
 
 	pr_debug("%s:Enter\n", __func__);
@@ -473,11 +516,13 @@ static int is_ext_spk_gpio_support(struct platform_device *pdev,
 			return -EINVAL;
 		}
 	}
+#endif
 	return 0;
 }
 
 static int enable_spk_ext_pa(struct snd_soc_component *component, int enable)
 {
+#if 0
 	struct snd_soc_card *card = component->card;
 	struct msm_asoc_mach_data *pdata = snd_soc_card_get_drvdata(card);
 	int ret;
@@ -510,6 +555,7 @@ static int enable_spk_ext_pa(struct snd_soc_component *component, int enable)
 			return ret;
 		}
 	}
+#endif
 	return 0;
 }
 
@@ -1202,13 +1248,7 @@ static void *def_msm_int_wcd_mbhc_cal(void)
 		return NULL;
 
 #define S(X, Y) ((WCD_MBHC_CAL_PLUG_TYPE_PTR(msm_int_wcd_cal)->X) = (Y))
-#if defined(CONFIG_MACH_LONGCHEER) || defined(CONFIG_MACH_XIAOMI_CLOVER)
-	S(v_hs_max, 1600);
-#elif defined(CONFIG_MACH_MI)
 	S(v_hs_max, 1700);
-#else
-	S(v_hs_max, 1500);
-#endif
 #undef S
 #define S(X, Y) ((WCD_MBHC_CAL_BTN_DET_PTR(msm_int_wcd_cal)->X) = (Y))
 	S(num_btn, WCD_MBHC_DEF_BUTTONS);
@@ -1231,51 +1271,17 @@ static void *def_msm_int_wcd_mbhc_cal(void)
 	 * 210-290 == Button 2
 	 * 360-680 == Button 3
 	 */
-#ifdef CONFIG_MACH_LONGCHEER
 	btn_low[0] = 75;
 	btn_high[0] = 75;
 	btn_low[1] = 225;
 	btn_high[1] = 225;
 	btn_low[2] = 450;
 	btn_high[2] = 450;
-	btn_low[3] = 500;
-	btn_high[3] = 500;
-	btn_low[4] = 500;
-	btn_high[4] = 500;
-#elif defined(CONFIG_MACH_MI)
-	btn_low[0] = 75;
-	btn_high[0] = 75;
-	btn_low[1] = 260;
-	btn_high[1] = 260;
-	btn_low[2] = 480;
-	btn_high[2] = 480;
-	btn_low[3] = 480;
-	btn_high[3] = 480;
-	btn_low[4] = 480;
-	btn_high[4] = 480;
-#elif defined(CONFIG_MACH_XIAOMI_CLOVER)
-	btn_low[0] = 75;
-	btn_high[0] = 75;
-	btn_low[1] = 246;
-	btn_high[1] = 246;
-	btn_low[2] = 440;
-	btn_high[2] = 440;
-	btn_low[3] = 440;
-	btn_high[3] = 440;
-	btn_low[4] = 440;
-	btn_high[4] = 440;
-#else
-	btn_low[0] = 75;
-	btn_high[0] = 75;
-	btn_low[1] = 150;
-	btn_high[1] = 150;
-	btn_low[2] = 225;
-	btn_high[2] = 225;
 	btn_low[3] = 450;
 	btn_high[3] = 450;
 	btn_low[4] = 500;
 	btn_high[4] = 500;
-#endif
+
 	return msm_int_wcd_cal;
 }
 
@@ -1340,6 +1346,7 @@ static int msm_audrx_init(struct snd_soc_pcm_runtime *rtd)
 	snd_soc_dapm_sync(dapm);
 
 	msm_anlg_cdc_spk_ext_pa_cb(enable_spk_ext_pa, ana_cdc);
+	msm_anlg_cdc_hph_ext_sw_cb(enable_hph_ext_sw, ana_cdc);
 	msm_dig_cdc_hph_comp_cb(msm_config_hph_compander_gpio, dig_cdc);
 
 	card = rtd->card->snd_card;
@@ -2205,25 +2212,23 @@ static struct snd_soc_dai_link msm_int_dai[] = {
 		.ignore_pmdown_time = 1,
 		.id = MSM_FRONTEND_DAI_MULTIMEDIA6,
 	},
-#ifdef CONFIG_MACH_LONGCHEER
 	{/* hw:x,40 */
-		.name = "Primary MI2S_TX Hostless",
-		.stream_name = "Primary MI2S_TX Hostless",
-		.cpu_dai_name = "PRI_MI2S_TX_HOSTLESS",
-		.platform_name	= "msm-pcm-hostless",
+		.name = "Tertiary MI2S_TX Hostless",
+		.stream_name = "Tertiary MI2S_TX Hostless",
+		.cpu_dai_name = "TERT_MI2S_TX_HOSTLESS",
+		.platform_name = "msm-pcm-hostless",
 		.dynamic = 1,
 		.dpcm_capture = 1,
 		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
 			SND_SOC_DPCM_TRIGGER_POST},
 		.no_host_mode = SND_SOC_DAI_LINK_NO_HOST,
 		.ignore_suspend = 1,
-		 /* this dailink has playback support */
+		/* this dailink has playback support */
 		.ignore_pmdown_time = 1,
 		/* This dainlink has MI2S support */
 		.codec_dai_name = "snd-soc-dummy-dai",
 		.codec_name = "snd-soc-dummy",
 	},
-#endif
 };
 
 
@@ -2315,6 +2320,15 @@ static struct snd_soc_dai_link msm_int_compress_capture_dai[] = {
 		.ignore_suspend = 1,
 		.id = MSM_FRONTEND_DAI_MULTIMEDIA29,
 	},
+};
+
+static struct snd_soc_dai_link_component tfa98xx_codecs[] = {
+	{
+		.name     = "tfa98xx.6-0034",
+		.of_node  = NULL,
+		.dai_name = "tfa98xx-aif-6-34",
+	},
+
 };
 
 static struct snd_soc_dai_link msm_int_be_dai[] = {
@@ -2661,19 +2675,8 @@ static struct snd_soc_dai_link msm_mi2s_be_dai_links[] = {
 		.stream_name = "Primary MI2S Playback",
 		.cpu_dai_name = "msm-dai-q6-mi2s.0",
 		.platform_name = "msm-pcm-routing",
-#ifdef CONFIG_SND_SOC_TAS2557
-		.codec_name = "tas2557.6-004c",
-		.codec_dai_name = "tas2557 ASI1",
-#elif defined(CONFIG_SND_SOC_MAX98937)
-		.codec_name = "max98927",
-		.codec_dai_name = "max98927-aif1",
-#elif defined(CONFIG_MACH_XIAOMI_CLOVER)
-		.codec_name     = "tas2557s.6-004c",
-		.codec_dai_name = "tas2557 Stereo ASI1",
-#else
 		.codec_name = "msm-stub-codec.1",
 		.codec_dai_name = "msm-stub-rx",
-#endif
 		.no_pcm = 1,
 		.dpcm_playback = 1,
 		.id = MSM_BACKEND_DAI_PRI_MI2S_RX,
@@ -2687,19 +2690,8 @@ static struct snd_soc_dai_link msm_mi2s_be_dai_links[] = {
 		.stream_name = "Primary MI2S Capture",
 		.cpu_dai_name = "msm-dai-q6-mi2s.0",
 		.platform_name = "msm-pcm-routing",
-#ifdef CONFIG_SND_SOC_TAS2557
-		.codec_name = "tas2557.6-004c",
-		.codec_dai_name = "tas2557 ASI1",
-#elif defined(CONFIG_SND_SOC_MAX98937)
-		.codec_name = "max98927",
-		.codec_dai_name = "max98927-aif1",
-#elif defined(CONFIG_MACH_XIAOMI_CLOVER)
-		.codec_name     = "tas2557s.6-004c",
-		.codec_dai_name = "tas2557 Stereo ASI1",
-#else
 		.codec_name = "msm-stub-codec.1",
 		.codec_dai_name = "msm-stub-tx",
-#endif
 		.no_pcm = 1,
 		.dpcm_capture = 1,
 		.id = MSM_BACKEND_DAI_PRI_MI2S_TX,
@@ -2712,13 +2704,8 @@ static struct snd_soc_dai_link msm_mi2s_be_dai_links[] = {
 		.stream_name = "Secondary MI2S Playback",
 		.cpu_dai_name = "msm-dai-q6-mi2s.1",
 		.platform_name = "msm-pcm-routing",
-#ifdef CONFIG_SND_SOC_TFA9894
-		.codec_name = "tfa98xx.2-0034",
-		.codec_dai_name = "tfa98xx-aif-2-34",
-#else
 		.codec_name = "msm-stub-codec.1",
 		.codec_dai_name = "msm-stub-rx",
-#endif
 		.no_pcm = 1,
 		.dpcm_playback = 1,
 		.id = MSM_BACKEND_DAI_SECONDARY_MI2S_RX,
@@ -2746,8 +2733,8 @@ static struct snd_soc_dai_link msm_mi2s_be_dai_links[] = {
 		.stream_name = "Tertiary MI2S Playback",
 		.cpu_dai_name = "msm-dai-q6-mi2s.2",
 		.platform_name = "msm-pcm-routing",
-		.codec_name = "msm-stub-codec.1",
-		.codec_dai_name = "msm-stub-rx",
+		.codecs = tfa98xx_codecs,
+		.num_codecs = 1,
 		.no_pcm = 1,
 		.dpcm_playback = 1,
 		.id = MSM_BACKEND_DAI_TERTIARY_MI2S_RX,
@@ -2761,8 +2748,8 @@ static struct snd_soc_dai_link msm_mi2s_be_dai_links[] = {
 		.stream_name = "Tertiary MI2S Capture",
 		.cpu_dai_name = "msm-dai-q6-mi2s.2",
 		.platform_name = "msm-pcm-routing",
-		.codec_name = "msm-stub-codec.1",
-		.codec_dai_name = "msm-stub-tx",
+		.codecs = tfa98xx_codecs,
+		.num_codecs = 1,
 		.no_pcm = 1,
 		.dpcm_capture = 1,
 		.id = MSM_BACKEND_DAI_TERTIARY_MI2S_TX,
@@ -3214,6 +3201,12 @@ static int msm_internal_init(struct platform_device *pdev,
 	if (ret < 0)
 		dev_dbg(&pdev->dev,
 			"%s: doesn't support external speaker pa\n",
+			__func__);
+			
+	ret = is_ext_hph_gpio_support(pdev, pdata);
+	if (ret < 0)
+		dev_dbg(&pdev->dev,
+			"%s: doesn't support external headphone switch\n",
 			__func__);
 
 	ret = of_property_read_string(pdev->dev.of_node,

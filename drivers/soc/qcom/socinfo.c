@@ -353,6 +353,9 @@ static struct msm_soc_info cpu_of_id[] = {
 	/* SDM636 ID */
 	[345] = {MSM_CPU_SDM636, "SDM636"},
 
+	/* SDM636 ID */
+	[345] = {MSM_CPU_SDM636, "SDM636"},
+
 	/* sm8150 ID */
 	[339] = {MSM_CPU_SM8150, "SM8150"},
 

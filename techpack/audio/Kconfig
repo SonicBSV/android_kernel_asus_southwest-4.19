@@ -158,40 +158,11 @@ config WCD_SPI_DMA_MASKING
 	tristate "WCD_SPI_DMA_MASKING"
 config WSA_MACRO
 	tristate "WSA_MACRO"
-config SND_SOC_TAS2557
-	tristate "Texas Instruments TAS2557 SmartAmp(R)"
-if SND_SOC_TAS2557
-config TAS2557_REGMAP
-	bool "Use of RegMap API"
-config TAS2557_CODEC
-	bool "Codec Driver support"
-config TAS2557_MISC
-	bool "Misc Driver support"
-endif # SND_SOC_TAS2557
-
-config SND_SOC_TAS2557_STEREO
-	tristate "Texas Instruments TAS2557 SmartAmp(R)"
-if SND_SOC_TAS2557_STEREO
-config TAS2557_REGMAP_STEREO
-	bool "Use of RegMap API"
-config TAS2557_CODEC_STEREO
-	bool "Codec Driver support"
-config TAS2557_MISC_STEREO
-	bool "Misc Driver support"
-endif # SND_SOC_TAS2557_STEREO
-
-config SND_I2S_PRIMARY
-	bool "Primary I2S Driver support"
-config SND_SOC_MAX98937
-	tristate "maxim Instruments 98937 SmartAmp(R)"
-config ELLIPTICLABS
-	tristate "Elliptic Labs fake proximity sensor support"
 config SOUND_CONTROL
 	bool "Sound Control for msm89xx"
-config SND_SOC_USB_HEADSET
-	tristate "Xiaomi USB analog headset driver"
-config SND_SOC_TFA9894
-	tristate "NXP Semiconductors TFA9894 amplifier"
+
+config SND_SOC_TFA9874
+	tristate "NXP Semiconductors TFA9874 audio amplifier"
 	depends on I2C
 
 endmenu
